@@ -62,7 +62,7 @@ void PointSeriesXY::updateCache(bool reset_old_data)
   {
     if (std::abs(_x_axis->at(i).x - _y_axis->at(i).x) > EPS)
     {
-      throw std::runtime_error("X and Y axis don't share the same time axis");
+      //throw std::runtime_error("X and Y axis don't share the same time axis");
     }
 
     const QPointF p(_x_axis->at(i).y, _y_axis->at(i).y);
