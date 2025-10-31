@@ -305,6 +305,42 @@ install(
 
 install(DIRECTORY plotjuggler_base/include/ DESTINATION include)
 
+# Install third-party DLL dependencies on Windows
+if(WIN32)
+  message(STATUS "Configuring third-party DLL installation for Windows")
+  
+  # List of third-party DLLs to install
+  set(THIRD_PARTY_DLLS
+    abseil_dll.dll
+    libprotobuf.dll
+    zstd.dll
+    pthreadVC3.dll
+    libcrypto-3-x64.dll
+    libssl-3-x64.dll
+    mosquitto.dll
+  )
+  
+  # Install each DLL for each configuration (Debug, Release, etc.)
+  foreach(dll_name ${THIRD_PARTY_DLLS})
+    # For multi-config generators (Visual Studio), check each config directory
+    foreach(config ${CMAKE_CONFIGURATION_TYPES})
+      if(EXISTS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${config}/${dll_name}")
+        install(FILES "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${config}/${dll_name}"
+                DESTINATION bin
+                CONFIGURATIONS ${config})
+        message(STATUS "  Will install (${config}): ${dll_name}")
+      endif()
+    endforeach()
+    
+    # For single-config generators or if DLL is in root directory
+    if(EXISTS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${dll_name}")
+      install(FILES "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${dll_name}"
+              DESTINATION bin)
+      message(STATUS "  Will install: ${dll_name}")
+    endif()
+  endforeach()
+endif()
+
 export(PACKAGE ${PROJECT_NAME})
 
 if(NOT COMPILING_WITH_AMENT AND NOT COMPILING_WITH_CATKIN)
