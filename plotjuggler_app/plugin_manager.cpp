@@ -42,11 +42,11 @@ void PluginManager::loadPluginsFromFolder(const QString& folderPath)
 
 void PluginManager::loadPlugin(const QString& filename)
 {
-  QPluginLoader pluginLoader(filename);
+  auto pluginLoader = std::make_unique<QPluginLoader>(filename);
   QObject* plugin = nullptr;
   try
   {
-    plugin = pluginLoader.instance();
+    plugin = pluginLoader->instance();
   }
   catch (std::runtime_error& err)
   {
@@ -54,9 +54,9 @@ void PluginManager::loadPlugin(const QString& filename)
                     .arg(filename, err.what());
     return;
   }
-  if (!plugin && pluginLoader.errorString().contains("is not an ELF object") == false)
+  if (!plugin && pluginLoader->errorString().contains("is not an ELF object") == false)
   {
-    qDebug() << filename << ": " << pluginLoader.errorString();
+    qDebug() << filename << ": " << pluginLoader->errorString();
     return;
   }
   if (plugin && dynamic_cast<PlotJugglerPlugin*>(plugin))
@@ -133,7 +133,8 @@ void PluginManager::loadPlugin(const QString& filename)
     else if (message_parser)
     {
       QStringList encodings = QString(message_parser->encoding()).split(";");
-      auto parser_ptr = std::shared_ptr<ParserFactoryPlugin>(message_parser);
+      // Use a no-op deleter since QPluginLoader manages the object's lifetime
+      auto parser_ptr = std::shared_ptr<ParserFactoryPlugin>(message_parser, [](ParserFactoryPlugin*){});
       for (const QString& encoding : encodings)
       {
         _parser_factories.insert(std::make_pair(encoding, parser_ptr));
@@ -143,6 +144,9 @@ void PluginManager::loadPlugin(const QString& filename)
     {
       _toolboxes.insert(std::make_pair(plugin_name, toolbox));
     }
+    
+    // Store the plugin loader to keep it alive
+    _plugin_loaders.push_back(std::move(pluginLoader));
   }
 }
 
@@ -184,6 +188,7 @@ void PluginManager::unloadAllPlugins()
   _toolboxes.clear();
   _parser_factories.clear();
   _loaded_plugins.clear();
+  _plugin_loaders.clear();
 }
 
 void PluginManager::loadWASM(const QString& pluginPath)

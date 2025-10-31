@@ -32,7 +32,7 @@ public:
   void unloadAllPlugins();
 
 private:
-  std::unique_ptr<QPluginLoader> m_pluginLoader;
+  std::vector<std::unique_ptr<QPluginLoader>> _plugin_loaders;
   QStringList _enabled_plugins;
   QStringList _disabled_plugins;
   bool _test_plugins_enabled = false;
