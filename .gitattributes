@@ -1,0 +1,3 @@
+# Preserve LF line endings
+*.gitattributes text eol=lf
+scripts/*.bat text eol=lf
