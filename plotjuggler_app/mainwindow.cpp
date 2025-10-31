@@ -564,7 +564,18 @@ void MainWindow::initializePlugins()
   // add loaded parsers to the current ones
   for (const auto& [plugin_name, parser] : _plugin_manager.parserFactories())
   {
-    auto encodings = QString(parser->encoding()).split(";");
+    qDebug() << "Loading parser plugin:" << plugin_name;
+
+    const char* encoding_cstr = parser->encoding();
+    qDebug() << "  encoding pointer:" << (void*)encoding_cstr;
+
+    if (!encoding_cstr)
+    {
+      qWarning() << "  ERROR: null encoding";
+      continue;
+    }
+
+    auto encodings = QString(encoding_cstr).split(";");
     for (const auto& encoding : encodings)
     {
       _parser_factories.insert(std::make_pair(encoding, parser));
